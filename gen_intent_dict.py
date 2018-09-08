@@ -3,7 +3,20 @@ import numpy as np
 import gensim
 from pprint import pprint
 
-frase_intent={}
+intent2hotvect={
+    "ShareCurrentLocation":[1, 0, 0, 0, 0, 0, 0, 0, 0, 0],
+    "ComparePlaces":[0, 1, 0, 0, 0, 0, 0, 0, 0, 0],
+    "GetPlaceDetails":[0, 0, 1, 0, 0, 0, 0, 0, 0, 0],
+    "SearchPlace":[0, 0, 0, 1, 0, 0, 0, 0, 0, 0],
+    "BookRestaurant":[0, 0, 0, 0, 1, 0, 0, 0, 0, 0],
+    "RequestRide":[0, 0, 0, 0, 0, 1, 0, 0, 0, 0],
+    "GetDirections":[0, 0, 0, 0, 0, 0, 1, 0, 0, 0],
+    "ShareETA":[0, 0, 0, 0, 0, 0, 0, 1, 0, 0],
+    "GetTrafficInformation":[0, 0, 0, 0, 0, 0, 0, 0, 1, 0],
+    "GetWeather":[0, 0, 0, 0, 0, 0, 0, 0, 0, 1]
+}
+
+embedded_class={"embeddedclass":[]}
 
 # Load pretrained model (since intermediate data is not included, the model cannot be refined with additional data)
 model = gensim.models.KeyedVectors.load_word2vec_format('../GoogleNews-vectors-negative300.bin.gz', binary=True) 
@@ -24,7 +37,7 @@ def make_dict():
     n_text=0
 
     for domain in data["domains"]:
-        print domain["description"]
+        #print domain["description"]
         for intent in domain["intents"]:
             n_intent=n_intent+1
             print "--intent name: "+ intent["name"] + "    |    intent description:" + intent["description"]
@@ -33,20 +46,26 @@ def make_dict():
                 embedded_list=[]
                 for word in query["text"].split(' '):
                     try:
-                        clean_word= word.replace('?', '').lower()
+                        clean_word= word.replace('?', '')
+                        clean_word= clean_word.replace(',', '')
+                        clean_word= clean_word.replace('.', '')
                         print('\t\t'+clean_word)
                     except:
                         print("It has an issue in replace method")
-                    
+                    #adicionando cada embedded referente a uma palavra a uma lista de embeddeds 
                     try:
                         embedded_list.append(model[clean_word])
                     except KeyError:
                         print("word %s not in vocabulary" %(clean_word))
 
                 mean_array = get_vec_mean(embedded_list)
-                
+                #adiciona uma tupla com o emebedded e seu y
+                embedded_class["embeddedclass"].append((mean_array.tolist(), intent2hotvect[intent["name"]]))
 
     print '\tnumero de texts: '+ str(n_text)
+
+    with open('embedded2intent.json', 'w') as embclass_file:
+        json.dump(embedded_class, embclass_file)
 
 if __name__=="__main__":
     make_dict()
