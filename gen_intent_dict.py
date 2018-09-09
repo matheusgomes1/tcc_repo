@@ -34,7 +34,7 @@ def get_vec_mean(embedded_list):
 
 def make_dict():
     n_intent=0
-    n_text=0
+    n_query=0
 
     for domain in data["domains"]:
         #print domain["description"]
@@ -42,14 +42,14 @@ def make_dict():
             n_intent=n_intent+1
             print "--intent name: "+ intent["name"] + "    |    intent description:" + intent["description"]
             for query in intent["queries"]:
-                n_text=n_text+1
+                n_query=n_query+1
                 embedded_list=[]
                 for word in query["text"].split(' '):
                     try:
                         clean_word= word.replace('?', '')
                         clean_word= clean_word.replace(',', '')
                         clean_word= clean_word.replace('.', '')
-                        print('\t\t'+clean_word)
+                        #print('\t\t'+clean_word)
                     except:
                         print("It has an issue in replace method")
                     #adicionando cada embedded referente a uma palavra a uma lista de embeddeds 
@@ -59,10 +59,11 @@ def make_dict():
                         print("word %s not in vocabulary" %(clean_word))
 
                 mean_array = get_vec_mean(embedded_list)
-                #adiciona uma tupla com o emebedded e seu y
-                embedded_class["embeddedclass"].append((mean_array.tolist(), intent2hotvect[intent["name"]]))
-
-    print '\tnumero de texts: '+ str(n_text)
+                #adiciona uma tupla com o emebedded e sua label (em hot vector), a frase e a label (string)
+                embedded_class["embeddedclass"].append((mean_array.tolist(), intent2hotvect[intent["name"]], query["text"], intent["name"]))
+            
+            print("intent: %s has %d queries"%(intent["name"], n_query))
+            n_query=0
 
     with open('embedded2intent.json', 'w') as embclass_file:
         json.dump(embedded_class, embclass_file)
