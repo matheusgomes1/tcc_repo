@@ -6,6 +6,7 @@ from keras.layers import Conv1D, GlobalAveragePooling1D, MaxPooling1D
 from keras.models import Sequential
 import matplotlib.pylab as plt
 import numpy as np
+from sklearn.model_selection import train_test_split
 
 index2label={
     0:"ShareCurrentLocation",
@@ -20,14 +21,14 @@ index2label={
     9:"GetWeather"
 }
 
-size_validation_batch= 50
+#test_set_size= 50
 num_classes = 10
 epochs = 100
 
-#extrai alguns elementos de x e y e cria um novo conjunto de validação e de treinamento
-def gen_validation_batch(batch_val_size, x, y):
-    x_val=[]
-    y_val=[]
+#extrai alguns elementos de x e y e cria um novo conjunto de teste e de treinamento
+def gen_test_set(batch_val_size, x, y):
+    x_test=[]
+    y_test=[]
     
     #evolve random indexes
     random_list = random.sample(xrange(len(x)), batch_val_size)
@@ -35,10 +36,10 @@ def gen_validation_batch(batch_val_size, x, y):
     for indx in random_list:
         elem_x = x.pop(indx)
         elem_y = y.pop(indx)
-        x_val.append(elem_x)
-        y_val.append(elem_y)
+        x_test.append(elem_x)
+        y_test.append(elem_y)
     
-    return (x_val, y_val),(x, y)
+    return (x_test, y_test),(x, y)
 
 #faz a predição de uma query em específico
 def query_predict(query):
@@ -52,7 +53,7 @@ def query_predict(query):
             predict = prediction[0]
             predict = predict.tolist()
             indx=predict.index(max(predict))
-            print('index= %d , label= %s , '%(indx, index2label[indx])+'vec_prediction= '+str(predict))
+            print('\nindex= %d , label= %s'%(indx, index2label[indx])+'\nvec_prediction= '+str(predict))
 
 
 with open('embedded2intent.json') as f:
@@ -69,27 +70,26 @@ for tuples in intent_dict["embeddedclass"]:
     nparray=np.asarray(tuples[1])
     y.append(nparray)
 
-(x_val, y_val),(x, y)= gen_validation_batch(size_validation_batch, x, y)
-print("len do x= "+str(len(x)))
-print("len do x_val= "+str(len(x_val)))
+
+#(x_test, y_test),(x, y)= gen_test_set(test_set_size, x, y)
+x, x_test, y, y_test = train_test_split(x, y, test_size=0.33, random_state=42)
+print("x size= "+str(len(x)))
+print("x_test size= "+str(len(x_test)))
+
 x= np.asarray(x)
 y= np.asarray(y)
-
-x_val= np.asarray(x_val)
-y_val= np.asarray(y_val)
+x_test= np.asarray(x_test)
+y_test= np.asarray(y_test)
 
 model = Sequential()
 model.add(Conv1D (kernel_size = (11), filters = 20, input_shape=(300, 1), activation='relu'))
-print(model.input_shape)
-print(model.output_shape)
 model.add(MaxPooling1D(pool_size = (11), strides=(1)))
-print(model.output_shape)
 model.add(Conv1D (kernel_size = (51), filters = 40, activation='relu'))
-print(model.output_shape)
+model.add(MaxPooling1D(pool_size = (31), strides=(1)))
+model.add(Conv1D (kernel_size = (51), filters = 60, activation='relu'))
 model.add(Flatten())
-print(model.output_shape)
 model.add(Dense(num_classes, activation='softmax',activity_regularizer=keras.regularizers.l2()))
-print(model.output_shape)
+model.summary()
 
 #optimizer = keras.optimizers.SGD(lr=0.01, decay=1e-5, momentum=0.9, nesterov=True)
 #optimizer = keras.optimizers.Adam(lr=0.001, beta_1=0.9, beta_2=0.999, epsilon=None, decay=0.0, amsgrad=False)
@@ -102,10 +102,10 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 tensorboard_callback=keras.callbacks.TensorBoard(log_dir='/home/matheusgs/TCC/tcc_repo/logs/', histogram_freq=0, batch_size=32, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None, embeddings_data=None)
 
 #o parâmetro validation_split separa uma porcentagem do conjunto de treinamento para teste
-model.fit(x, y, batch_size=50, epochs=epochs, validation_split=0.5, callbacks=[tensorboard_callback])
-score = model.evaluate(x_val, y_val, batch_size=32, verbose=1)
+model.fit(x, y, batch_size=50, epochs=epochs, validation_split=0.1, callbacks=[tensorboard_callback], shuffle=True)
+score = model.evaluate(x_test, y_test, batch_size=32, verbose=1)
 
-print('\n validation')
+print('\nteste')
 print('%s = %f , %s = %f'%(model.metrics_names[0], score[0], model.metrics_names[1], score[1]))
 
 #query_predict("Find me a table for four for dinner tonight")

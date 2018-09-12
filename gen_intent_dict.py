@@ -56,7 +56,7 @@ def make_dict():
                     try:
                         embedded_list.append(model[clean_word])
                     except KeyError:
-                        print("word %s not in vocabulary" %(clean_word))
+                        print("word \"%s\" not in vocabulary" %(clean_word))
 
                 mean_array = get_vec_mean(embedded_list)
                 #adiciona uma tupla com o emebedded e sua label (em hot vector), a frase e a label (string)
