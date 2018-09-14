@@ -7,6 +7,11 @@ from keras.models import Sequential
 import matplotlib.pylab as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
+########## my modules#######################
+from topologies.topology1 import Topology1
+from topologies.topology2 import Topology2
+from topologies.topology3 import Topology3
+from topologies.topology_dense import TopologyDense
 
 index2label={
     0:"ShareCurrentLocation",
@@ -23,7 +28,7 @@ index2label={
 
 #test_set_size= 50
 num_classes = 10
-epochs = 100
+epochs = 50
 
 #extrai alguns elementos de x e y e cria um novo conjunto de teste e de treinamento
 def gen_test_set(batch_val_size, x, y):
@@ -55,21 +60,33 @@ def query_predict(query):
             indx=predict.index(max(predict))
             print('\nindex= %d , label= %s'%(indx, index2label[indx])+'\nvec_prediction= '+str(predict))
 
-
 with open('embedded2intent.json') as f:
     intent_dict= json.load(f)
 
 x=[]
 y=[]
-for tuples in intent_dict["embeddedclass"]:
-    #pegando os x's e transformando em numpyarray
-    nparray=np.asarray(tuples[0])
-    nparray=np.reshape(nparray, (300, 1))
-    x.append(nparray)
-    #pegando os y's e transformando em numpyarray
-    nparray=np.asarray(tuples[1])
-    y.append(nparray)
 
+#carrega os dados do json embedded2intent e coloca no formato (n, 300, 1) que é o compatível para a Conv1D
+def load_dataset2conv1D():
+    for tuples in intent_dict["embeddedclass"]:
+        #pegando os x's e transformando em numpyarray
+        nparray=np.asarray(tuples[0])
+        nparray=np.reshape(nparray, (300, 1))
+        x.append(nparray)
+        #pegando os y's e transformando em numpyarray
+        nparray=np.asarray(tuples[1])
+        y.append(nparray)
+
+#carrega os dados e coloca no formato para dense layer (n, 300)
+def load_dataset2dense():
+    for tuples in intent_dict["embeddedclass"]:
+        nparray=np.asarray(tuples[0])
+        x.append(nparray)
+        nparray=np.asarray(tuples[1])
+        y.append(nparray)
+
+#load_dataset2conv1D()
+load_dataset2dense()
 
 #(x_test, y_test),(x, y)= gen_test_set(test_set_size, x, y)
 x, x_test, y, y_test = train_test_split(x, y, test_size=0.33, random_state=42)
@@ -81,14 +98,11 @@ y= np.asarray(y)
 x_test= np.asarray(x_test)
 y_test= np.asarray(y_test)
 
-model = Sequential()
-model.add(Conv1D (kernel_size = (11), filters = 20, input_shape=(300, 1), activation='relu'))
-model.add(MaxPooling1D(pool_size = (11), strides=(1)))
-model.add(Conv1D (kernel_size = (51), filters = 40, activation='relu'))
-model.add(MaxPooling1D(pool_size = (31), strides=(1)))
-model.add(Conv1D (kernel_size = (51), filters = 60, activation='relu'))
-model.add(Flatten())
-model.add(Dense(num_classes, activation='softmax',activity_regularizer=keras.regularizers.l2()))
+#pega modelo do modulo topologies
+#model= Topology1().get_model()
+#model= Topology2().get_model()
+#model= Topology3().get_model()
+model= TopologyDense().get_model()
 model.summary()
 
 #optimizer = keras.optimizers.SGD(lr=0.01, decay=1e-5, momentum=0.9, nesterov=True)
@@ -102,7 +116,7 @@ model.compile(loss=keras.losses.categorical_crossentropy,
 tensorboard_callback=keras.callbacks.TensorBoard(log_dir='/home/matheusgs/TCC/tcc_repo/logs/', histogram_freq=0, batch_size=32, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None, embeddings_data=None)
 
 #o parâmetro validation_split separa uma porcentagem do conjunto de treinamento para teste
-model.fit(x, y, batch_size=50, epochs=epochs, validation_split=0.1, callbacks=[tensorboard_callback], shuffle=True)
+model.fit(x, y, batch_size=50, epochs=epochs, validation_split=0.15, callbacks=[tensorboard_callback], shuffle=True)
 score = model.evaluate(x_test, y_test, batch_size=32, verbose=1)
 
 print('\nteste')
