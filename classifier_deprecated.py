@@ -1,6 +1,6 @@
 #-*- encoding: UTF-8 -*-
 from __future__ import print_function
-import keras, json, random
+import keras, json, random, argparse
 from keras.layers import Dense, Flatten
 from keras.layers import Conv1D, GlobalAveragePooling1D, MaxPooling1D
 from keras.models import Sequential
@@ -11,6 +11,7 @@ from sklearn.model_selection import train_test_split
 from topologies.topology1 import Topology1
 from topologies.topology2 import Topology2
 from topologies.topology3 import Topology3
+from topologies.topology4 import Topology4
 from topologies.topology_dense import TopologyDense
 
 index2label={
@@ -26,9 +27,17 @@ index2label={
     9:"GetWeather"
 }
 
+parser = argparse.ArgumentParser(description='Plataform for test in neural networks')
+parser.add_argument('--seed', type=int, default= 42, help='seed for random generator')
+
+
+####################################GLOBAL VARIABLES#############################################################
 #test_set_size= 50
 num_classes = 10
-epochs = 50
+epochs = 35
+seed=parser.parse_args().seed
+
+#################################################################################################################
 
 #extrai alguns elementos de x e y e cria um novo conjunto de teste e de treinamento
 def gen_test_set(batch_val_size, x, y):
@@ -60,7 +69,7 @@ def query_predict(query):
             indx=predict.index(max(predict))
             print('\nindex= %d , label= %s'%(indx, index2label[indx])+'\nvec_prediction= '+str(predict))
 
-with open('embedded2intent.json') as f:
+with open('embedded2intent_deprecated.json') as f:
     intent_dict= json.load(f)
 
 x=[]
@@ -89,7 +98,7 @@ def load_dataset2dense():
 load_dataset2dense()
 
 #(x_test, y_test),(x, y)= gen_test_set(test_set_size, x, y)
-x, x_test, y, y_test = train_test_split(x, y, test_size=0.33, random_state=42)
+x, x_test, y, y_test = train_test_split(x, y, test_size=0.33, random_state=seed)
 print("x size= "+str(len(x)))
 print("x_test size= "+str(len(x_test)))
 
@@ -102,7 +111,8 @@ y_test= np.asarray(y_test)
 #model= Topology1().get_model()
 #model= Topology2().get_model()
 #model= Topology3().get_model()
-model= TopologyDense().get_model()
+#model= Topology4().get_model()
+model= TopologyDense(num_classes).get_model()
 model.summary()
 
 #optimizer = keras.optimizers.SGD(lr=0.01, decay=1e-5, momentum=0.9, nesterov=True)

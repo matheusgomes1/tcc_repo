@@ -12,11 +12,12 @@ from keras.layers import Conv1D, GlobalAveragePooling1D, MaxPooling1D
 from keras.models import Sequential
 
 class TopologyDense():
-    def __init__(self):
+    def __init__(self, qntd_classes):
         self.model = Sequential()
         self.model.add(Dense(300, input_shape=(300,)))
-        self.model.add(Dense(300))
-        self.model.add(Dense(100))
-        self.model.add(Dense(10, activation='softmax',activity_regularizer=keras.regularizers.l2()))
+        #self.model.add(Dense(500))
+        #self.model.add(Dense(500))
+        #self.model.add(Dense(100))
+        self.model.add(Dense(qntd_classes, activation='softmax',activity_regularizer=keras.regularizers.l2()))
     def get_model(self):
         return self.model
