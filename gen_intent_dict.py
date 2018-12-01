@@ -1,8 +1,9 @@
 #-*- encoding: UTF-8 -*-
 import json
-import os
+import os, io 
 import numpy as np
 import gensim
+import argparse
 from pprint import pprint
 
 intent2hotvect = {
@@ -15,8 +16,25 @@ intent2hotvect = {
     'BookRestaurant':[0, 0, 0, 0, 0, 0, 1],
 }
 
+parser = argparse.ArgumentParser(description='dictionary generator to join utterances with your respective embeddeds')
+parser.add_argument('--out', type=str, default= 'embedded2intent_dict.json', help='name of out file')
+parser.add_argument('--embeddeds', type=str, default='/home/matheusgs/Downloads/WordVectorsDatasets/wiki-news-300d-1M-subword.vec', help='name of embeddeds dataset')
+
+jsonOutName = parser.parse_args().out
+dataInName = parser.parse_args().embeddeds
+
+def load_model(fname):
+    fin = io.open(fname, 'r', encoding='utf-8', newline='\n', errors='ignore')
+    n, d = map(int, fin.readline().split())
+    data = {}
+    for line in fin:
+        tokens = line.rstrip().split(' ')
+        data[tokens[0]] = map(float, tokens[1:])
+    return data
+
 # Load pretrained model (since intermediate data is not included, the model cannot be refined with additional data)
-model = gensim.models.KeyedVectors.load_word2vec_format('../GoogleNews-vectors-negative300.bin.gz', binary=True) 
+#model = gensim.models.KeyedVectors.load_word2vec_format(dataInName, binary=True) 
+model = load_model(dataInName)
 
 def get_vec_mean(embedded_list):
     embedded_sum=0
@@ -91,7 +109,6 @@ for dir_name in list_dirs:
             dataset.append(dict(query=query, intent=dir_name, embeddedsMatrix=matrix_vecs, label=intent2hotvect[dir_name]))
 
 del model
-print('dataset ready')
 
-with open('embedded2intent_ds2.json', 'w') as embclass_file:
+with open(jsonOutName, 'w') as embclass_file:
     embclass_file.write(json.dumps(dataset))
