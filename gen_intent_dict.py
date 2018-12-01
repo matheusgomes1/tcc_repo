@@ -80,7 +80,7 @@ def word2embedded(query):
 
     return embedded_list
 
-root_path= '../nlu-benchmark-master/2017-06-custom-intent-engines/'
+root_path= '../nlu-benchmark/2017-06-custom-intent-engines/'
 
 list_dirs= list(os.walk(root_path))[0][1]
 print(list_dirs)
