@@ -49,13 +49,13 @@ def get_utterance_matrix(embedded_list):
     idx = 0
     while(len(matrix)<lin):
         if(idx > len(embedded_list)-1):
-            matrix.append(embedded_list[-1].tolist())    
+            matrix.append(np.asarray(embedded_list[-1]).tolist())    
         else:
-            matrix.append(embedded_list[idx].tolist())
+            matrix.append(np.asarray(embedded_list[idx]).tolist())
         idx=idx+1
     
     if (idx < len(embedded_list)-1):
-        matrix[lin-1]=get_vec_mean(embedded_list[(lin-1):]).tolist()
+        matrix[lin-1]=get_vec_mean(np.asarray(embedded_list[(lin-1):])).tolist()
     
     print('len_matrix %d'%(len(matrix)))
     return matrix
