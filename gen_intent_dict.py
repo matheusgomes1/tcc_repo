@@ -102,11 +102,16 @@ for dir_name in list_dirs:
                 query = query + elemText["text"]
 
             embedded_list = word2embedded(query)
-            #embedded_mean = get_vec_mean(embedded_list)
-            matrix_vecs = get_utterance_matrix(embedded_list)
+            
+	    try:
+	 	embedded_mean = get_vec_mean(embedded_list)
+            except TypeError:
+		embedded_mean = get_vec_mean(np.asarray(embedded_list))
+	    
+	    #matrix_vecs = get_utterance_matrix(embedded_list)
 
-            #dataset.append(dict(query=query, intent=dir_name, meanEmbedded=embedded_mean.tolist(), label=intent2hotvect[dir_name]))
-            dataset.append(dict(query=query, intent=dir_name, embeddedsMatrix=matrix_vecs, label=intent2hotvect[dir_name]))
+            dataset.append(dict(query=query, intent=dir_name, meanEmbedded=embedded_mean.tolist(), label=intent2hotvect[dir_name]))
+            #dataset.append(dict(query=query, intent=dir_name, embeddedsMatrix=matrix_vecs, label=intent2hotvect[dir_name]))
 
 del model
 
