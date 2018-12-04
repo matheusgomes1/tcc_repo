@@ -5,7 +5,7 @@ from keras.layers import Dense, Flatten
 from keras.layers import Conv1D, GlobalAveragePooling1D, MaxPooling1D
 from keras.models import Sequential
 from keras.callbacks import Callback
-import matplotlib.pylab as plt
+# import matplotlib.pylab as plt
 import numpy as np
 from sklearn.model_selection import train_test_split
 
@@ -108,8 +108,8 @@ y_test= np.asarray(y_test)
 #model= Topology3().get_model()
 #model= Topology4().get_model()
 #model= TopologyDense(num_classes).get_model()
-#model= Topology1_2D(num_classes).get_model()
-model= Topology2_2D(num_classes).get_model()
+model= Topology1_2D(num_classes).get_model()
+#model= Topology2_2D(num_classes).get_model()
 
 model.summary()
 
@@ -121,10 +121,10 @@ model.compile(loss=keras.losses.categorical_crossentropy,
               optimizer=optimizer,
               metrics=['accuracy', Metrics().f1])
 
-tensorboard_callback=keras.callbacks.TensorBoard(log_dir='/home/matheusgs/TCC/tcc_repo/logs_tensorboard/', histogram_freq=0, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None, embeddings_data=None)
+#tensorboard_callback=keras.callbacks.TensorBoard(log_dir='logs_tensorboard/', histogram_freq=0, write_graph=True, write_grads=False, write_images=False, embeddings_freq=0, embeddings_layer_names=None, embeddings_metadata=None, embeddings_data=None)
 
 #o parâmetro validation_split separa uma porcentagem do conjunto de treinamento para teste
-model.fit(x, y, batch_size=32, epochs=epochs, validation_split=0.3, callbacks=[tensorboard_callback], shuffle=True)
+model.fit(x, y, batch_size=32, epochs=epochs, validation_split=0.3, shuffle=True)
 score = model.evaluate(x_test, y_test, batch_size=32, verbose=1)
 
 print('\nteste')
@@ -134,3 +134,4 @@ print('%s = %f , %s = %f, %s = %f' %(model.metrics_names[0], score[0], model.met
 #query_predict("On may the thirteenth, 2037 what will it be like in Wilderville, Montenegro")
 #query_predict("I want to watch the show Railroad Model Craftsman")
 #query_predict("Help me locate The Tristan Betrayal")
+
