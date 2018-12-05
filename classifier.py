@@ -89,8 +89,8 @@ def load_dataset2dense():
         y.append(nparray)
 
 #load_dataset2conv1D()
-#load_dataset2dense()
-load_dataset2conv2D()
+load_dataset2dense()
+#load_dataset2conv2D()
 
 x, x_test, y, y_test = train_test_split(x, y, test_size=0.33, random_state=seed)
 
@@ -107,8 +107,8 @@ y_test= np.asarray(y_test)
 #model= Topology2().get_model()
 #model= Topology3().get_model()
 #model= Topology4().get_model()
-#model= TopologyDense(num_classes).get_model()
-model= Topology1_2D(num_classes).get_model()
+model= TopologyDense(num_classes).get_model()
+#model= Topology1_2D(num_classes).get_model()
 #model= Topology2_2D(num_classes).get_model()
 
 model.summary()
