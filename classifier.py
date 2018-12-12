@@ -17,10 +17,11 @@ from topologies.topology4 import Topology4
 from topologies.topology_dense import TopologyDense
 from topologies.topology1_2d import Topology1_2D
 from topologies.topology2_2d import Topology2_2D
+from topologies.topology3_2d import Topology3_2D
 
 from metrics import Metrics
 
-index2label = {
+index2intent = {
     0:'GetWeather',
     1:'RateBook',
     2:'SearchCreativeWork',
@@ -35,7 +36,6 @@ parser.add_argument('--dataset', type=str, default= 'embedded2intent.json', help
 parser.add_argument('--epochs', type=int, default= 5, help='number of epochs to fit the model')
 ####################################GLOBAL VARIABLES#############################################################
 #test_set_size= 50
-num_classes = 7
 epochs = parser.parse_args().epochs
 seed = parser.parse_args().seed
 datasetPath = parser.parse_args().dataset
@@ -52,11 +52,42 @@ def query_predict(query):
             predict = prediction[0]
             predict = predict.tolist()
             indx=predict.index(max(predict))
-            print('\npredict index= %d , predict intent= %s'%(indx, index2label[indx])+'\nvec_prediction= '+str(predict))
+            print('\npredict index= %d , predict intent= %s'%(indx, index2intent[indx])+'\nvec_prediction= '+str(predict))
             print("gabarito = ",block["label"], " intent = ", block["intent"])
+            break
+
+def query_predict_2d():
+	n=0
+	n_acc=0
+	n_err=0
+	#busca query no dicionario intent_dict
+	for block in intent_dict:
+		n=n+1
+		pred_array=np.asarray(block["embeddedsMatrix"])
+		pred_array=np.reshape(pred_array, (1, 8, 300, 1))
+		prediction=model.predict(pred_array , batch_size=1)
+		predict = prediction[0]
+		predict = predict.tolist()
+		indx=predict.index(max(predict))
+		
+		if(index2intent[indx] != block["intent"]):
+			try:
+				print("#falha:\n\tquery = ",block["query"],"\n\tintent = ", block["intent"], "\n\tpredicted = ", index2intent[indx])
+			except UnicodeEncodeError:
+				pass
+			n_err = n_err+1
+		else:
+			n_acc = n_acc+1
+		#print('\npredict index= %d , predict intent= %s'%(indx, index2intent[indx])+'\nvec_prediction= '+str(predict))
+		#print("gabarito = ",block["label"], " intent = ", block["intent"])
+	print("## numero acertos = ", n_acc)
+	print("## numero erros = ", n_err)
+	print("## taxa acc = ", float(n_acc)/n)
 
 with open(datasetPath) as f:
     intent_dict= json.load(f)
+
+num_classes = len(intent_dict[0]["label"])
 
 x=[]
 y=[]
@@ -89,12 +120,12 @@ def load_dataset2dense():
         y.append(nparray)
 
 #load_dataset2conv1D()
-load_dataset2dense()
-#load_dataset2conv2D()
+#load_dataset2dense()
+load_dataset2conv2D()
 
 x, x_test, y, y_test = train_test_split(x, y, test_size=0.33, random_state=seed)
 
-print("x size= "+str(len(x)))
+print("x_train + validation size= "+str(len(x)))
 print("x_test size= "+str(len(x_test)))
 
 x= np.asarray(x)
@@ -107,9 +138,10 @@ y_test= np.asarray(y_test)
 #model= Topology2().get_model()
 #model= Topology3().get_model()
 #model= Topology4().get_model()
-model= TopologyDense(num_classes).get_model()
+#model= TopologyDense(num_classes).get_model()
 #model= Topology1_2D(num_classes).get_model()
 #model= Topology2_2D(num_classes).get_model()
+model = Topology3_2D(num_classes).get_model()
 
 model.summary()
 
@@ -130,8 +162,4 @@ score = model.evaluate(x_test, y_test, batch_size=32, verbose=1)
 print('\nteste')
 print('%s = %f , %s = %f, %s = %f' %(model.metrics_names[0], score[0], model.metrics_names[1], score[1], model.metrics_names[2], score[2]))
 
-#query_predict("What will the weather be this year in Horseshoe Lake State Fish and Wildlife Area?")
-#query_predict("On may the thirteenth, 2037 what will it be like in Wilderville, Montenegro")
-#query_predict("I want to watch the show Railroad Model Craftsman")
-#query_predict("Help me locate The Tristan Betrayal")
-
+query_predict_2d()
