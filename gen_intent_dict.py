@@ -66,7 +66,7 @@ def get_vec_mean(embedded_list):
 
 def get_utterance_matrix(embedded_list):
     matrix=[]
-    lin = 8
+    lin = 15
     idx = 0
     while(len(matrix)<lin):
         if(idx > len(embedded_list)-1):

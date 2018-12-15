@@ -18,6 +18,8 @@ from topologies.topology_dense import TopologyDense
 from topologies.topology1_2d import Topology1_2D
 from topologies.topology2_2d import Topology2_2D
 from topologies.topology3_2d import Topology3_2D
+from topologies.topology4_2d import Topology4_2D
+from topologies.topology5_15x300 import Topology5_15x300
 
 from metrics import Metrics
 
@@ -74,7 +76,7 @@ def query_predict_2d():
 			try:
 				print("#falha:\n\tquery = ",block["query"],"\n\tintent = ", block["intent"], "\n\tpredicted = ", index2intent[indx])
 			except UnicodeEncodeError:
-				pass
+				print("## UNICODE ENCODE ERROR")
 			n_err = n_err+1
 		else:
 			n_acc = n_acc+1
@@ -103,10 +105,10 @@ def load_dataset2conv1D():
         nparray=np.asarray(block["label"])
         y.append(nparray)
 
-def load_dataset2conv2D():
+def load_dataset2conv2D(dim):
     for block in intent_dict:
         nparray=np.asarray(block["embeddedsMatrix"])
-        nparray=np.reshape(nparray, (8, 300, 1))
+        nparray=np.reshape(nparray, (dim[0], dim[1], 1))
         x.append(nparray)
         nparray=np.asarray(block["label"])
         y.append(nparray)
@@ -121,7 +123,7 @@ def load_dataset2dense():
 
 #load_dataset2conv1D()
 #load_dataset2dense()
-load_dataset2conv2D()
+load_dataset2conv2D((15, 300))
 
 x, x_test, y, y_test = train_test_split(x, y, test_size=0.33, random_state=seed)
 
@@ -141,7 +143,9 @@ y_test= np.asarray(y_test)
 #model= TopologyDense(num_classes).get_model()
 #model= Topology1_2D(num_classes).get_model()
 #model= Topology2_2D(num_classes).get_model()
-model = Topology3_2D(num_classes).get_model()
+#model = Topology3_2D(num_classes).get_model()
+#model = Topology4_2D(num_classes).get_model()
+model = Topology5_15x300(num_classes).get_model()
 
 model.summary()
 
@@ -162,4 +166,4 @@ score = model.evaluate(x_test, y_test, batch_size=32, verbose=1)
 print('\nteste')
 print('%s = %f , %s = %f, %s = %f' %(model.metrics_names[0], score[0], model.metrics_names[1], score[1], model.metrics_names[2], score[2]))
 
-query_predict_2d()
+#query_predict_2d()
