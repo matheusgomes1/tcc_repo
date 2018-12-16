@@ -20,6 +20,7 @@ from topologies.topology2_2d import Topology2_2D
 from topologies.topology3_2d import Topology3_2D
 from topologies.topology4_2d import Topology4_2D
 from topologies.topology5_15x300 import Topology5_15x300
+from topologies.topology6_20x300 import Topology6_20x300
 
 from metrics import Metrics
 
@@ -33,9 +34,11 @@ index2intent = {
     6:'BookRestaurant'
 }
 parser = argparse.ArgumentParser(description='Plataform for test in neural networks')
-parser.add_argument('--seed', type=int, default= 42, help='seed for random generator')
-parser.add_argument('--dataset', type=str, default= 'embedded2intent.json', help='dataset path')
-parser.add_argument('--epochs', type=int, default= 5, help='number of epochs to fit the model')
+parser.add_argument('-s', '--seed', type=int, default= 42, help='seed for random generator')
+parser.add_argument('-d', '--dataset', type=str, default= 'embedded2intent.json', help='dataset path')
+parser.add_argument('-e', '--epochs', type=int, default= 5, help='number of epochs to fit the model')
+parser.add_argument('-i', '--inspect', default= False, action='store_true', help='see utterances that were predicted wrong (True or False)')
+
 ####################################GLOBAL VARIABLES#############################################################
 #test_set_size= 50
 epochs = parser.parse_args().epochs
@@ -58,28 +61,29 @@ def query_predict(query):
             print("gabarito = ",block["label"], " intent = ", block["intent"])
             break
 
-def query_predict_2d():
+def query_predict_2d(dim):
 	n=0
 	n_acc=0
 	n_err=0
 	#busca query no dicionario intent_dict
 	for block in intent_dict:
 		n=n+1
-		pred_array=np.asarray(block["embeddedsMatrix"])
-		pred_array=np.reshape(pred_array, (1, 8, 300, 1))
+		raw_matrix = reshape_matrix(dim[0], block["embeddedsMatrix"])
+		nparray=np.asarray(raw_matrix)
+		pred_array=np.reshape(nparray, (1, dim[0], dim[1], 1))
 		prediction=model.predict(pred_array , batch_size=1)
 		predict = prediction[0]
 		predict = predict.tolist()
 		indx=predict.index(max(predict))
 		
 		if(index2intent[indx] != block["intent"]):
-			try:
-				print("#falha:\n\tquery = ",block["query"],"\n\tintent = ", block["intent"], "\n\tpredicted = ", index2intent[indx])
-			except UnicodeEncodeError:
-				print("## UNICODE ENCODE ERROR")
-			n_err = n_err+1
+				try:
+					print("#falha:\n\tquery = ",block["query"],"\n\tintent = ", block["intent"], "\n\tpredicted = ", index2intent[indx])
+				except UnicodeEncodeError:
+					print("## UNICODE ENCODE ERROR")
+				n_err = n_err+1
 		else:
-			n_acc = n_acc+1
+				n_acc = n_acc+1
 		#print('\npredict index= %d , predict intent= %s'%(indx, index2intent[indx])+'\nvec_prediction= '+str(predict))
 		#print("gabarito = ",block["label"], " intent = ", block["intent"])
 	print("## numero acertos = ", n_acc)
@@ -105,9 +109,36 @@ def load_dataset2conv1D():
         nparray=np.asarray(block["label"])
         y.append(nparray)
 
+def get_vec_mean(embedded_list):
+    embedded_sum=0
+    for emb in embedded_list:
+        embedded_sum=embedded_sum+emb
+    
+    try:
+        return embedded_sum/len(embedded_list)
+    except ZeroDivisionError:
+        return np.zeros(300)
+
+
+def reshape_matrix(lin, embedded_list):
+    matrix=[]
+    idx = 0
+    while(len(matrix)<lin):
+        if(idx > len(embedded_list)-1):
+            matrix.append(np.zeros(300).tolist())    
+        else:
+            matrix.append(np.asarray(embedded_list[idx]).tolist())
+        idx=idx+1
+    
+    if (idx < len(embedded_list)-1):
+        matrix[lin-1]=get_vec_mean(np.asarray(embedded_list[(lin-1):])).tolist()
+
+    return matrix
+
 def load_dataset2conv2D(dim):
     for block in intent_dict:
-        nparray=np.asarray(block["embeddedsMatrix"])
+        raw_matrix = reshape_matrix(dim[0], block["embeddedsMatrix"])
+        nparray=np.asarray(raw_matrix)
         nparray=np.reshape(nparray, (dim[0], dim[1], 1))
         x.append(nparray)
         nparray=np.asarray(block["label"])
@@ -146,6 +177,7 @@ y_test= np.asarray(y_test)
 #model = Topology3_2D(num_classes).get_model()
 #model = Topology4_2D(num_classes).get_model()
 model = Topology5_15x300(num_classes).get_model()
+#model = Topology6_20x300(num_classes).get_model()
 
 model.summary()
 
@@ -166,4 +198,6 @@ score = model.evaluate(x_test, y_test, batch_size=32, verbose=1)
 print('\nteste')
 print('%s = %f , %s = %f, %s = %f' %(model.metrics_names[0], score[0], model.metrics_names[1], score[1], model.metrics_names[2], score[2]))
 
-#query_predict_2d()
+if (parser.parse_args().inspect):
+    query_predict_2d((15, 300))
+

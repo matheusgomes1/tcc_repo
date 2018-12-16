@@ -80,6 +80,14 @@ def get_utterance_matrix(embedded_list):
     
     print('len_matrix %d'%(len(matrix)))
     return matrix
+
+def matrix_formatter(embedded_list):
+    matrix = []
+    
+    for lin in embedded_list:
+        #para caso não for numpyarray não dar erro na hra de converter pra lista, então forço a ser numpyarray, e caso for numpyarray vai converter pra lista do mesmo jeito
+        matrix.append(np.asarray(lin).tolist())
+    return matrix
            
 def word2embedded(query):
     embedded_list=[]
@@ -129,9 +137,9 @@ def evaluate_snips():
                 except TypeError:
                     embedded_mean = get_vec_mean(np.asarray(embedded_list))
                 
-                matrix_vecs = get_utterance_matrix(embedded_list)
+                #matrix_vecs = get_utterance_matrix(embedded_list)
 
-                dataset.append(dict(query=query, intent=dir_name, meanEmbedded=embedded_mean.tolist(), embeddedsMatrix=matrix_vecs, label=intent2hotvect[dir_name]))
+                dataset.append(dict(query=query, intent=dir_name, meanEmbedded=embedded_mean.tolist(), embeddedsMatrix = matrix_formatter(embedded_list), label=intent2hotvect[dir_name]))
                 #dataset.append(dict(query=query, intent=dir_name, embeddedsMatrix=matrix_vecs, label=intent2hotvect[dir_name]))
 
 def evaluateNluCorpora():
