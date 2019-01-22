@@ -21,6 +21,8 @@ from topologies.topology3_2d import Topology3_2D
 from topologies.topology4_2d import Topology4_2D
 from topologies.topology5_15x300 import Topology5_15x300
 from topologies.topology6_20x300 import Topology6_20x300
+from topologies.topology7_15x300_2ch import Topology7_15x300_2ch
+from topologies.topology8_15x300 import Topology8_15x300
 
 from metrics import Metrics
 
@@ -144,6 +146,41 @@ def load_dataset2conv2D(dim):
         nparray=np.asarray(block["label"])
         y.append(nparray)
 
+def reshape_matrix_2ch(lin, embedded_list):
+    matrix=[]
+    idx = 0
+    while(len(matrix)<lin):
+        if(idx > len(embedded_list)-1):
+            matrix.append(np.zeros(300).tolist())    
+        else:
+            matrix.append(np.asarray(embedded_list[idx]).tolist())
+        idx=idx+1
+    
+    if (idx < len(embedded_list)-1):
+        matrix[lin-1]=get_vec_mean(np.asarray(embedded_list[(lin-1):])).tolist()
+
+    matrix_inv = []
+    ind = len(matrix)-1
+    
+    while(ind>=0):
+        matrix_inv.append(matrix[ind])
+        ind = ind -1
+    
+    matrix_res = []
+    matrix_res.append(matrix)
+    matrix_res.append(matrix_inv)
+    return matrix_res
+
+def load_dataset2conv2D_2ch(dim):
+    for block in intent_dict:
+        raw_matrix = reshape_matrix_2ch(dim[0], block["embeddedsMatrix"])
+        nparray=np.asarray(raw_matrix)
+        nparray=np.reshape(nparray, (dim[0], dim[1], 2))
+        x.append(nparray)
+        nparray=np.asarray(block["label"])
+        y.append(nparray)
+
+
 #carrega os dados e coloca no formato para dense layer (n, 300)
 def load_dataset2dense():
     for block in intent_dict:
@@ -176,8 +213,9 @@ y_test= np.asarray(y_test)
 #model= Topology2_2D(num_classes).get_model()
 #model = Topology3_2D(num_classes).get_model()
 #model = Topology4_2D(num_classes).get_model()
-model = Topology5_15x300(num_classes).get_model()
+#model = Topology5_15x300(num_classes).get_model()
 #model = Topology6_20x300(num_classes).get_model()
+model = Topology8_15x300(num_classes).get_model()
 
 model.summary()
 
