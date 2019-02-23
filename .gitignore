@@ -1,5 +1,4 @@
 *.debian
 *.pyc
-*.json
-
+embedded2intent_*.json
 embedded2intent_deprecated.json
